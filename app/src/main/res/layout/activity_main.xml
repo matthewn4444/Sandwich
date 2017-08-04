@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/app"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroundListColor"
+    app:context="com.matthewn.subwich.MainActivity">
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swiperefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.matthewn.subwich.ui.EnhancedRecyclerView
+                android:id="@+id/recycleview"
+                android:scrollbarStyle="outsideOverlay"
+                style="@style/RecyclerviewStyle"/>
+
+            <Button
+                android:id="@+id/requestwritepermissionsbutton"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="@string/label_request_write_permission"
+                android:visibility="gone"
+                android:padding="30dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/emptytext"
+                android:layout_gravity="center"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:text="@string/message_no_subtitles_in_folder"
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </FrameLayout>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</android.support.constraint.ConstraintLayout>

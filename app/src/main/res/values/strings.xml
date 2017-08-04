@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Subwich</string>
+
+    <!-- Menu options -->
+    <string name="menu_action_change_folder">Change Subtitles Folder</string>
+
+    <!-- Message -->
+    <string name="message_request_storage_permission_explanation">This app request to read and write storage.</string>
+    <string name="message_subtitles_folder_not_valid">The subtitles folder specified is not valid, choose another.</string>
+    <string name="message_no_subtitles_in_folder">There are currently no subtitles.</string>
+    <string name="message_no_subtitles_folder_selected">There is currently no subtitles folder selected, please find the folder where the root of your subtitles are located.</string>
+
+    <!-- Labels -->
+    <string name="label_request_write_permission">Request Write Permissions</string>
+    <string name="label_no_subtitles_folder_selected">No Folder Selected</string>
+</resources>
