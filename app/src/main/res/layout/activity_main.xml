@@ -13,36 +13,49 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <FrameLayout
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.matthewn.subwich.ui.EnhancedRecyclerView
-                android:id="@+id/recycleview"
-                android:scrollbarStyle="outsideOverlay"
-                style="@style/RecyclerviewStyle"/>
-
-            <Button
-                android:id="@+id/requestwritepermissionsbutton"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:text="@string/label_request_write_permission"
-                android:visibility="gone"
-                android:padding="30dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:id="@+id/emptytext"
-                android:layout_gravity="center"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:text="@string/message_no_subtitles_in_folder"
-                android:visibility="gone"
+            <FrameLayout
+                android:layout_alignParentTop="true"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent">
 
-        </FrameLayout>
+                <com.matthewn.subwich.ui.EnhancedRecyclerView
+                    android:id="@+id/recycleview"
+                    android:scrollbarStyle="outsideOverlay"
+                    style="@style/RecyclerviewStyle"/>
+
+                <Button
+                    android:id="@+id/requestwritepermissionsbutton"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="@string/label_request_write_permission"
+                    android:visibility="gone"
+                    android:padding="30dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/emptytext"
+                    android:layout_gravity="center"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:text="@string/message_no_subtitles_in_folder"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </FrameLayout>
+
+            <include
+                android:layout_alignParentBottom="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/external_device_footer"/>
+
+        </RelativeLayout>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

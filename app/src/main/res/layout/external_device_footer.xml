@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        android:layout_height="1dp"
+        android:layout_width="match_parent"
+        layout="@layout/divider"/>
+
+    <LinearLayout
+        android:id="@+id/externalcontrolslayout"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:background="@android:color/background_light"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:src="@drawable/ic_usb_black_24dp"
+            android:contentDescription="@string/label_devices"
+            android:tint="@color/colorAccent"
+            android:layout_gravity="center"
+            android:layout_width="20dp"
+            android:layout_height="wrap_content" />
+
+        <Spinner
+            android:id="@+id/externaldevicespinner"
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+</LinearLayout>

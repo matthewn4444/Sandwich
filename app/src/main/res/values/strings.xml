@@ -9,8 +9,15 @@
     <string name="message_subtitles_folder_not_valid">The subtitles folder specified is not valid, choose another.</string>
     <string name="message_no_subtitles_in_folder">There are currently no subtitles.</string>
     <string name="message_no_subtitles_folder_selected">There is currently no subtitles folder selected, please find the folder where the root of your subtitles are located.</string>
+    <string name="message_no_device_connected">No external devices connected.</string>
+    <string name="message_select_subtitles_folder">Please select a folder from where to read subtitles.</string>
+    <string name="message_usb_device_available">There is a usb device available, please setup by selecting the root of the device.</string>
+    <string name="message_request_storage_permission_granted_already">This device has already been setup.</string>
+    <string name="message_request_storage_permission_primary_storage_warning">Please choose a device that is not the internal storage</string>
+    <string name="message_request_storage_permission_invalid_storage_warning">That is not a valid root folder of an external device, please try again</string>
 
     <!-- Labels -->
     <string name="label_request_write_permission">Request Write Permissions</string>
     <string name="label_no_subtitles_folder_selected">No Folder Selected</string>
+    <string name="label_devices">Devices</string>
 </resources>

@@ -6,17 +6,19 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -31,10 +33,10 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends BaseActivity implements RecyclerViewAdapterListener,
+public class MainActivity extends UsbDetectionActivity implements RecyclerViewAdapterListener,
         SwipeRefreshLayout.OnRefreshListener {
     private static final String TAG = "MainActivity";
-    private static final int REQUEST_CODE_SUBTITLES_FOLDER = 1;
+    private static final int REQUEST_CODE_SUBTITLES_FOLDER = REQUEST_CODE_SETUP_USB  + 1;
 
     private EnhancedRecyclerView mRecyclerView;
     private VideoListAdapter mAdapter;
@@ -45,8 +47,6 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
     private Dialog mSubtitleSelectMessageDialog;
 
     private SharedPreferences mPrefs;
-
-    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private final FileFilter mFolderFilter = new FileFilter() {
         @Override
@@ -122,6 +122,7 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
         switch (requestCode) {
             case BaseActivity.PERMISSIONS_REQUEST_READ_STORAGE:
                 if (hasStoragePermissions()) {
+                    invalidateOptionsMenu();
                     mWritePermButton.setVisibility(View.GONE);
                     loadFiles();
                 }
@@ -130,9 +131,25 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Set the disabled state when no storage permissions are valid
+        MenuItem changeFolderItem = menu.findItem(R.id.action_change_folder);
+        changeFolderItem.setEnabled(hasStoragePermissions());
+        Drawable resIcon = changeFolderItem.getIcon();
+        if (!hasStoragePermissions()) {
+            resIcon.mutate().setColorFilter(Color.GRAY, PorterDuff.Mode.SRC_IN);
+        }
+        changeFolderItem.setEnabled(hasStoragePermissions());
+        changeFolderItem.setIcon(resIcon);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_change_folder:
+                Toast.makeText(this, R.string.message_select_subtitles_folder, Toast.LENGTH_SHORT)
+                        .show();
                 selectSubtitlesFolder();
                 return true;
         }
@@ -142,19 +159,17 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
 
     @Override
     public final void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-        if (requestCode == REQUEST_CODE_SUBTITLES_FOLDER) {
-            Uri treeUri;
-            if (resultCode == Activity.RESULT_OK) {
-                // Save the selected folder as the subtitles folder
-                treeUri = resultData.getData();
-                Uri docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri,
-                        DocumentsContract.getTreeDocumentId(treeUri));
-                String path = UriUtils.getPath(this, docUri);
-                mPrefs.edit().putString(getString(R.string.settings_subtitles_folder), path).apply();
+        super.onActivityResult(requestCode, resultCode, resultData);
+        if (requestCode == REQUEST_CODE_SUBTITLES_FOLDER && resultCode == Activity.RESULT_OK) {
+            // Save the selected folder as the subtitles folder
+            Uri treeUri = resultData.getData();
+            Uri docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri,
+                    DocumentsContract.getTreeDocumentId(treeUri));
+            String path = UriUtils.getPath(this, docUri);
+            mPrefs.edit().putString(getString(R.string.settings_subtitles_folder), path).apply();
 
-                // Load after selecting a new folder
-                loadFiles();
-            }
+            // Load after selecting a new folder
+            loadFiles();
         }
     }
 
@@ -166,8 +181,7 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
     }
 
     private void selectSubtitlesFolder() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        startActivityForResult(intent, REQUEST_CODE_SUBTITLES_FOLDER);
+        selectFolder(REQUEST_CODE_SUBTITLES_FOLDER);
     }
 
     private void loadFinished() {
@@ -196,6 +210,7 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
     private void loadFiles() {
         final String subsPath = mPrefs.getString(
                 getString(R.string.settings_subtitles_folder), null);
+        mAdapter.clear();
         if (subsPath == null) {
             setTitle(R.string.label_no_subtitles_folder_selected);
             showSelectSubtitlesFolderDialog();
@@ -209,9 +224,6 @@ public class MainActivity extends BaseActivity implements RecyclerViewAdapterLis
         AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
-                mAdapter.clear();
-
-
                 // Check for valid root folder
                 if (!root.exists() || !root.isDirectory() || !root.canRead()) {
                     mMainHandler.post(new Runnable() {

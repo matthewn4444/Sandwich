@@ -4,8 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -16,12 +19,15 @@ import android.view.Menu;
 public abstract class BaseActivity extends AppCompatActivity {
     protected static final int PERMISSIONS_REQUEST_READ_STORAGE = 1;
 
+    protected final Handler mMainHandler = new Handler(Looper.getMainLooper());
+
     protected static void requestStoragePermissions(Activity activity) {
         ActivityCompat.requestPermissions(activity,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 PERMISSIONS_REQUEST_READ_STORAGE);
     }
 
+    private static boolean mStartedForResult = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +72,27 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
         getMenuInflater().inflate(getMenuId(), menu);
         return true;
+    }
+
+    protected void selectFolder(int requestCode) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(intent, requestCode);
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        super.startActivityForResult(intent, requestCode);
+        mStartedForResult = true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mStartedForResult = false;
+    }
+
+    protected boolean hasStartedForResult() {
+        return mStartedForResult;
     }
 
     protected boolean hasStoragePermissions() {
