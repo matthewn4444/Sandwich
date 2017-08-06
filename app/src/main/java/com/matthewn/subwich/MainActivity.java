@@ -1,6 +1,7 @@
 package com.matthewn.subwich;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -18,6 +19,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,8 +32,6 @@ import com.matthewn.subwich.ui.SpacesItemDecoration;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends UsbDetectionActivity implements RecyclerViewAdapterListener,
         SwipeRefreshLayout.OnRefreshListener {
@@ -93,11 +93,6 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
     }
 
     @Override
-    protected int getToolbarId() {
-        return 0;
-    }
-
-    @Override
     protected int getLayoutId() {
         return R.layout.activity_main;
     }
@@ -109,9 +104,24 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
 
     @Override
     public void onClick(View v, int position) {
-//        Intent in = new Intent(this, DetailsActivity.class);
-//        in.putExtra(VideoEntry.EXTRA, mAdapter.getEntry(position));
-//        startActivity(in);
+        Intent in = new Intent(this, SubtitleListingActivity.class);
+        View sharedElement1 = v.findViewById(R.id.image);
+        View sharedElement2 = findViewById(R.id.footer);
+        View sharedElement3 = findViewById(R.id.transitionList);
+        Pair<View, String> p1 = Pair.create(sharedElement1, sharedElement1.getTransitionName());
+        Pair<View, String> p2 = Pair.create(sharedElement2, sharedElement2.getTransitionName());
+        Pair<View, String> p3 = Pair.create(sharedElement3, sharedElement3.getTransitionName());
+        ActivityOptions options = ActivityOptions
+                .makeSceneTransitionAnimation(this, p1, p2, p3);
+        in.putExtra(SubtitleListingActivity.FILE_PATH_EXTRA, mAdapter.getEntry(position));
+        startActivity(in, options.toBundle());
+    }
+
+    @Override
+    public void onActivityReenter(int resultCode, Intent data) {
+        super.onActivityReenter(resultCode, data);
+
+
     }
 
     @Override
@@ -240,39 +250,12 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
                     File[] folders = root.listFiles(mFolderFilter);
                     if (folders != null) {
                         for (File folder : folders) {
-                            String title = folder.getName();
-                            String path = folder.getAbsolutePath();
-
-                            // Search for cover image
-                            String imagePath = null;
-                            File imageFile = new File(path + "/cover.png");
-                            if (imageFile.exists()
-                                    || (imageFile = new File(path + "/cover.jpg")).exists()
-                                    || (imageFile = new File(path + "/image.png")).exists()
-                                    || (imageFile = new File(path + "/image.jpg")).exists()) {
-                                imagePath = imageFile.getAbsolutePath();
-                            }
-
-                            // Search number of subtitles
-                            List<Integer> episodeNumbers = new ArrayList<>();
-                            File[] subs = folder.listFiles(VideoEntry.SubtitleFileFilter);
-                            if (subs != null) {
-                                for (File subtitleFile : subs) {
-                                    String fileName = subtitleFile.getName();
-                                    String name = fileName.substring(0, fileName.lastIndexOf("."));
-                                    try {
-                                        episodeNumbers.add(Integer.parseInt(name, 10));
-                                    } catch (NumberFormatException e) {
-                                        Log.w(TAG,
-                                                "Cannot parse subtitle name because wrong format:" +
-                                                        " [" + fileName + "]");
-                                    }
-                                }
-                            }
-                            if (!episodeNumbers.isEmpty()) {
-                                mAdapter.add(new VideoEntry(title, path, imagePath, episodeNumbers));
+                            VideoEntry entry = new VideoEntry(folder);
+                            entry.reloadData();
+                            if (entry.getNumSubs() > 0) {
+                                mAdapter.add(entry);
                             } else {
-                                Log.w(TAG, "Ignore folder '" + path
+                                Log.w(TAG, "Ignore folder '" + folder.getAbsolutePath()
                                         + "' because no subtitles were found");
                             }
                         }

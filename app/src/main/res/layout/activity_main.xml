@@ -8,7 +8,6 @@
     app:context="com.matthewn.subwich.MainActivity">
 
     <android.support.v4.widget.SwipeRefreshLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/swiperefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -54,6 +53,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 layout="@layout/external_device_footer"/>
+
+            <View
+                android:alpha="0"
+                android:transitionName="list"
+                android:id="@+id/transitionList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
 
         </RelativeLayout>
 

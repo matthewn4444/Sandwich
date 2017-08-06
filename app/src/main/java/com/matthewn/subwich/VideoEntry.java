@@ -2,26 +2,30 @@ package com.matthewn.subwich;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class VideoEntry implements Parcelable {
+    private static final String TAG = "VideoEntry";
     private static final Set<String> NoneCapitalizableWords = new HashSet<>(Arrays.asList(
             "no", "of", "a", "to"));
 
     private final String mName;
     private final String mTitle;
     private final String mPath;
-    private final String mCoverPath;
-    private final int[] mEpisodes;
+    private String mCoverPath;
+    private int[] mEpisodes;
+    private long mLastUsed;
 
     public static final FileFilter SubtitleFileFilter = new FileFilter() {
         @Override
@@ -48,31 +52,23 @@ public class VideoEntry implements Parcelable {
         mPath = p.readString();
         mCoverPath = p.readString();
         mEpisodes = p.createIntArray();
+        mLastUsed = p.readLong();
     }
 
-    public VideoEntry(String title, String path, String coverPath, int[] episodesList) {
+    public VideoEntry(File file) {
+        String title = file.getName();
         mName = title.toLowerCase().replaceAll("\\s+", "-");
         mTitle = presentable(title);
-        mPath = path;
-        mCoverPath = coverPath;
-        mEpisodes = episodesList;
-        Arrays.sort(mEpisodes);
-    }
-
-    public VideoEntry(String title, String path, String coverPath, List<Integer> episodesList) {
-        this(title, path, coverPath, new int[episodesList.size()]);
-        for (int i = 0; i < episodesList.size(); i++) {
-            mEpisodes[i] = episodesList.get(i);
-        }
-        Arrays.sort(mEpisodes);
+        mPath = file.getAbsolutePath();
+        mCoverPath = null;
+        mEpisodes = null;
+        mLastUsed = 0;
     }
 
     public void loadImage(ImageView imageView) {
         if (mCoverPath != null) {
             Picasso.with(imageView.getContext())
                     .load(new File(mCoverPath))
-                    .centerCrop()
-                    .fit()
                     .into(imageView);
         }
     }
@@ -100,7 +96,55 @@ public class VideoEntry implements Parcelable {
     }
 
     public int getNumSubs() {
-        return mEpisodes.length;
+        return mEpisodes != null ? mEpisodes.length : 0;
+    }
+
+    public String getPath() {
+        return mPath;
+    }
+
+    public long getLastUsed() {
+        return mLastUsed;
+    }
+
+    public void updateUsed() {
+        mLastUsed = System.currentTimeMillis();
+    }
+
+    public void reloadData() {
+        File folder = new File(mPath);
+
+        // Search for cover image
+        File imageFile = new File(mPath + "/cover.png");
+        if (imageFile.exists()
+                || (imageFile = new File(mPath + "/cover.jpg")).exists()
+                || (imageFile = new File(mPath + "/image.png")).exists()
+                || (imageFile = new File(mPath + "/image.jpg")).exists()) {
+            mCoverPath = imageFile.getAbsolutePath();
+        }
+
+        // Search number of subtitles
+        List<Integer> episodeNumbers = new ArrayList<>();
+        File[] subs = folder.listFiles(SubtitleFileFilter);
+        if (subs != null) {
+            for (File subtitleFile : subs) {
+                String fileName = subtitleFile.getName();
+                String name = fileName.substring(0, fileName.lastIndexOf("."));
+                try {
+                    episodeNumbers.add(Integer.parseInt(name, 10));
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "Subtitle name has wrong format: [" + fileName + "]");
+                }
+            }
+            if (!episodeNumbers.isEmpty()) {
+                mEpisodes = new int[episodeNumbers.size()];
+                for (int i = 0; i < episodeNumbers.size(); i++) {
+                    mEpisodes[i] = episodeNumbers.get(i);
+                }
+            } else {
+                mEpisodes = null;
+            }
+        }
     }
 
     @Override
@@ -115,6 +159,7 @@ public class VideoEntry implements Parcelable {
         dest.writeString(mPath);
         dest.writeString(mCoverPath);
         dest.writeIntArray(mEpisodes);
+        dest.writeLong(mLastUsed);
     }
 
     private String presentable(String str) {

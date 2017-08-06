@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroundListColor">
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swiperefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/image"
+                android:layout_alignParentTop="true"
+                android:transitionName="bg"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.matthewn.subwich.ui.EnhancedRecyclerView
+                android:alpha="0"
+                android:transitionName="list"
+                android:id="@+id/recycleview"
+                android:scrollbarStyle="outsideOverlay"
+                style="@style/RecyclerviewStyle"/>
+
+            <include
+                android:layout_alignParentBottom="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                layout="@layout/external_device_footer"/>
+
+        </RelativeLayout>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</android.support.constraint.ConstraintLayout>

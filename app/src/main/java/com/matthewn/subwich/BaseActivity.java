@@ -12,7 +12,6 @@ import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 
@@ -33,14 +32,6 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getLayoutId());
-
-        // Setup toolbar
-        if (getToolbarId() != 0) {
-            final Toolbar toolbar = getToolbarView();
-            if (toolbar != null) {
-                setSupportActionBar(toolbar);
-            }
-        }
 
         // Check permissions
         if (!hasStoragePermissions()) {
@@ -99,11 +90,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
-    protected Toolbar getToolbarView() {
-        return (Toolbar) findViewById(getToolbarId());
-    }
-
-    protected abstract int getToolbarId();
     protected abstract int getLayoutId();
     protected abstract int getMenuId();
 

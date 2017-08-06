@@ -20,4 +20,6 @@
     <string name="label_request_write_permission">Request Write Permissions</string>
     <string name="label_no_subtitles_folder_selected">No Folder Selected</string>
     <string name="label_devices">Devices</string>
+    <string name="label_episode">Episode %1$s</string>
+    <string name="label_single_episode">Subtitles</string>
 </resources>
