@@ -140,6 +140,13 @@ public abstract class UsbDetectionActivity extends BaseActivity {
         }
     }
 
+    protected Uri getSelectedDevice() {
+        if (mDevices.isEmpty()) {
+            return null;
+        }
+        return mDevices.get(mExtDevicesSpinner.getSelectedItemPosition());
+    }
+
     protected void updateUsbDevicesListing() {
         updateUsbDevicesListing(false);
     }

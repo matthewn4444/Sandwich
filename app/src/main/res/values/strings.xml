@@ -15,6 +15,14 @@
     <string name="message_request_storage_permission_granted_already">This device has already been setup.</string>
     <string name="message_request_storage_permission_primary_storage_warning">Please choose a device that is not the internal storage</string>
     <string name="message_request_storage_permission_invalid_storage_warning">That is not a valid root folder of an external device, please try again</string>
+    <string name="message_no_device_connected_to_write">There is no devices to write to. Please connect a usb and try again.</string>
+    <string name="message_device_missing">Error because cannot find device.</string>
+    <string name="message_missing_files">Unable to copy subtitle file because missing files.</string>
+    <string name="message_copy_subtitle_error">Unable to copy subtitle file because IO error.</string>
+    <string name="message_output_stream_error">Unable to copy subtitle file because could not write to output.</string>
+    <string name="message_unable_create_output_error">Unable to create the output file.</string>
+    <string name="message_unable_create_folder_error">Unable to create the output directory.</string>
+    <string name="message_subtitle_success_copy">The subtitle was successfully copied.</string>
 
     <!-- Labels -->
     <string name="label_request_write_permission">Request Write Permissions</string>

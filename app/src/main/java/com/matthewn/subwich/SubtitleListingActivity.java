@@ -1,9 +1,12 @@
 package com.matthewn.subwich;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.provider.DocumentFile;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
@@ -11,12 +14,18 @@ import android.transition.Transition;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.matthewn.subwich.ui.EnhancedRecyclerView;
 import com.matthewn.subwich.ui.RecyclerViewAdapterListener;
 import com.matthewn.subwich.ui.SpacesItemDecoration;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +34,8 @@ public class SubtitleListingActivity extends UsbDetectionActivity
 
     private static final String TAG = "SubtitleListingActivity";
     static final String FILE_PATH_EXTRA = "SubtitleListingActivity.file.path.extra";
+    private static final String SUBTITLE_FILE = "sub.srt";
+    private static final String SUBTITLE_FOLDER = "sub";
 
     private EnhancedRecyclerView mRecyclerView;
     private SubtitleListAdapter mAdapter;
@@ -114,8 +125,96 @@ public class SubtitleListingActivity extends UsbDetectionActivity
     }
 
     @Override
-    public void onClick(View v, int position) {
+    public void onClick(View v, final int position) {
+        updateUsbDevicesListing();
 
+        final Uri selectedUri = getSelectedDevice();
+        final Context ctx = this;
+        if (selectedUri == null) {
+            Toast.makeText(this, R.string.message_no_device_connected_to_write, Toast.LENGTH_SHORT)
+                    .show();
+        } else {
+            AsyncTask.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+                @Override
+                public void run() {
+                    int messageRes = 0;
+                    boolean isError = true;
+
+                    // Try to write file into /sub/sub.srt, create files if needed
+                    DocumentFile file = DocumentFile.fromTreeUri(ctx, selectedUri);
+                    if (!file.exists()) {
+                        messageRes = R.string.message_device_missing;
+                    } else {
+                        // Create subtitle folder if not exists
+                        DocumentFile subFolder = file.findFile(SUBTITLE_FOLDER);
+                        if (subFolder == null) {
+                            subFolder = file.createDirectory(SUBTITLE_FOLDER);
+                        }
+                        if (subFolder == null) {
+                            messageRes = R.string.message_unable_create_folder_error;
+                        } else {
+                            OutputStream out = null;
+                            InputStream in = null;
+                            try {
+                                // Create the subtitle file if not exists
+                                DocumentFile srtFile = subFolder.findFile(SUBTITLE_FILE);
+                                if (srtFile == null) {
+                                    srtFile = subFolder.createFile(null, SUBTITLE_FILE);
+                                }
+                                if (srtFile == null) {
+                                    messageRes = R.string.message_unable_create_output_error;
+                                } else {
+                                    // Copy data over to file
+                                    out = getContentResolver().openOutputStream(srtFile.getUri());
+                                    if (out != null) {
+                                        in = new FileInputStream(mAdapter.getEntry(position));
+                                        byte[] buffer = new byte[1024];
+                                        int len;
+                                        while ((len = in.read(buffer)) != -1) {
+                                            out.write(buffer, 0, len);
+                                        }
+                                        messageRes = R.string.message_subtitle_success_copy;
+                                        isError = false;
+                                    } else {
+                                        messageRes = R.string.message_output_stream_error;
+                                    }
+                                }
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                                messageRes = R.string.message_missing_files;
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                messageRes = R.string.message_copy_subtitle_error;
+                            } finally {
+                                if (out != null) {
+                                    try {
+                                        out.close();
+                                    } catch (IOException ignored) {
+                                    }
+                                }
+                                if (in != null) {
+                                    try {
+                                        in.close();
+                                    } catch (IOException ignored) {
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    final int finalMessageRes = messageRes;
+                    final boolean finalIsError = isError;
+                    mMainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ctx, finalMessageRes, Toast.LENGTH_SHORT).show();
+                            if (finalIsError) {
+                                Log.e(TAG, getString(finalMessageRes));
+                            }
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private void animateListing(boolean show) {
