@@ -11,9 +11,12 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static com.matthewn.subwich.BaseActivity.log;
 
 public class VideoEntry implements Parcelable {
     private static final String TAG = "VideoEntry";
@@ -31,6 +34,23 @@ public class VideoEntry implements Parcelable {
         @Override
         public boolean accept(File pathname) {
             return pathname.getName().endsWith(".srt");
+        }
+    };
+
+    public static final Comparator<VideoEntry> SortComparator = new Comparator<VideoEntry>() {
+        @Override
+        public int compare(VideoEntry o1, VideoEntry o2) {
+            long diff = o2.getLastUsed() - o1.getLastUsed();
+            if (diff != 0) {
+                if (o1.getLastUsed() == 0) {
+                    return 1;
+                } else if (o2.getLastUsed() == 0) {
+                    return -1;
+                }
+                return (int) diff;
+            }
+            log("Sort name", o1.getTitle(), o2.getTitle());
+            return o1.getTitle().compareTo(o2.getTitle());
         }
     };
 
@@ -57,7 +77,7 @@ public class VideoEntry implements Parcelable {
 
     public VideoEntry(File file) {
         String title = file.getName();
-        mName = title.toLowerCase().replaceAll("\\s+", "-");
+        mName = title.toLowerCase().replaceAll("[\\s~`!@#$%^&*(){}\\[\\];:\"'<,.>?\\/\\\\|_+=-]+", "-");
         mTitle = presentable(title);
         mPath = file.getAbsolutePath();
         mCoverPath = null;
@@ -70,6 +90,8 @@ public class VideoEntry implements Parcelable {
             Picasso.with(imageView.getContext())
                     .load(new File(mCoverPath))
                     .into(imageView);
+        } else {
+            imageView.setImageDrawable(null);
         }
     }
 
@@ -111,6 +133,10 @@ public class VideoEntry implements Parcelable {
         mLastUsed = System.currentTimeMillis();
     }
 
+    void setLastUsed(long timestamp) {
+        mLastUsed = timestamp;
+    }
+
     public void reloadData() {
         File folder = new File(mPath);
 
@@ -141,6 +167,7 @@ public class VideoEntry implements Parcelable {
                 for (int i = 0; i < episodeNumbers.size(); i++) {
                     mEpisodes[i] = episodeNumbers.get(i);
                 }
+                Arrays.sort(mEpisodes);
             } else {
                 mEpisodes = null;
             }

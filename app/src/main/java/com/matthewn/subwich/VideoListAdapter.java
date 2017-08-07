@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.matthewn.subwich.ui.ClickableAdapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class VideoListAdapter extends ClickableAdapter<VideoListAdapter.Holder, VideoEntry> {
@@ -51,5 +52,9 @@ public class VideoListAdapter extends ClickableAdapter<VideoListAdapter.Holder, 
         entry.loadImage(holder.imageView);
         holder.nameView.setText(Html.fromHtml(entry.getTitle()));
         holder.detailsView.setText(entry.getFormattedSubsInfo());
+    }
+
+    public void sort() {
+        Collections.sort(mEntries, VideoEntry.SortComparator);
     }
 }

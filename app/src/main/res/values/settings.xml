@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_subtitles_folder">settings.subtitles.folder.key</string>
+    <string name="settings_subtitles_last_written">settings.subtitles.last.written.key</string>
 </resources>

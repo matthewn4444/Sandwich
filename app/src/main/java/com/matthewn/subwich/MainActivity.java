@@ -16,13 +16,16 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.support.annotation.NonNull;
+import android.support.v4.app.SharedElementCallback;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
+import android.transition.Transition;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -32,6 +35,9 @@ import com.matthewn.subwich.ui.SpacesItemDecoration;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends UsbDetectionActivity implements RecyclerViewAdapterListener,
         SwipeRefreshLayout.OnRefreshListener {
@@ -66,6 +72,7 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
         mEmptyView = findViewById(R.id.emptytext);
         mWritePermButton = (Button) findViewById(R.id.requestwritepermissionsbutton);
         mLayoutManager = new GridLayoutManager(this, 1);
+
         mRecyclerView.addItemDecoration(new SpacesItemDecoration(20));
         mRecyclerView.setLayoutManager(mLayoutManager);
         int verticalPadding = getResources()
@@ -108,20 +115,18 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
         View sharedElement1 = v.findViewById(R.id.image);
         View sharedElement2 = findViewById(R.id.footer);
         View sharedElement3 = findViewById(R.id.transitionList);
+        View navigationBar = findViewById(android.R.id.navigationBarBackground);
         Pair<View, String> p1 = Pair.create(sharedElement1, sharedElement1.getTransitionName());
         Pair<View, String> p2 = Pair.create(sharedElement2, sharedElement2.getTransitionName());
         Pair<View, String> p3 = Pair.create(sharedElement3, sharedElement3.getTransitionName());
+        Pair<View, String> p4 = null;
+        if (navigationBar != null) {
+            p4 = Pair.create(navigationBar, Window.NAVIGATION_BAR_BACKGROUND_TRANSITION_NAME);
+        }
         ActivityOptions options = ActivityOptions
-                .makeSceneTransitionAnimation(this, p1, p2, p3);
+                .makeSceneTransitionAnimation(this, p1, p2, p3, p4);
         in.putExtra(SubtitleListingActivity.FILE_PATH_EXTRA, mAdapter.getEntry(position));
         startActivity(in, options.toBundle());
-    }
-
-    @Override
-    public void onActivityReenter(int resultCode, Intent data) {
-        super.onActivityReenter(resultCode, data);
-
-
     }
 
     @Override
@@ -180,6 +185,58 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
 
             // Load after selecting a new folder
             loadFiles();
+        }
+    }
+
+    @Override
+    public void onActivityReenter(int resultCode, Intent data) {
+        super.onActivityReenter(resultCode, data);
+
+        // If moved subtitle file to external device, it will scroll to the top and move the video
+        // that was last moved to the top of the list and update the transition
+        if (data != null
+                && data.getBooleanExtra(SubtitleListingActivity.RETURN_HAS_WRITTEN_EXTRA, false)) {
+            // Resort the entries
+            for (int i = 0; i < mAdapter.getItemCount(); i++) {
+                VideoEntry entry = mAdapter.getEntry(i);
+                entry.setLastUsed(getTimestamp(entry));
+            }
+            mAdapter.sort();
+            mAdapter.notifyDataSetChanged();
+
+            // Scroll to the top to do this animation
+            mRecyclerView.scrollToPosition(0);
+            setExitSharedElementCallback(new SharedElementCallback() {
+                @Override
+                public void onMapSharedElements(List<String> names, Map<String, View> elements) {
+                    super.onMapSharedElements(names, elements);
+                    elements.put("bg", mRecyclerView.getChildAt(0).findViewById(R.id.image));
+                }
+            });
+            getWindow().getSharedElementExitTransition().addListener(
+                    new Transition.TransitionListener() {
+                @Override
+                public void onTransitionStart(Transition transition) {
+                }
+
+                @Override
+                public void onTransitionEnd(Transition transition) {
+                    setExitSharedElementCallback((SharedElementCallback) null);
+                }
+
+                @Override
+                public void onTransitionCancel(Transition transition) {
+                }
+
+                @Override
+                public void onTransitionPause(Transition transition) {
+                }
+
+                @Override
+                public void onTransitionResume(Transition transition) {
+
+                }
+            });
         }
     }
 
@@ -249,15 +306,22 @@ public class MainActivity extends UsbDetectionActivity implements RecyclerViewAd
                     // Scan for the videos and its information
                     File[] folders = root.listFiles(mFolderFilter);
                     if (folders != null) {
+                        List<VideoEntry> entries = new ArrayList<>();
                         for (File folder : folders) {
                             VideoEntry entry = new VideoEntry(folder);
+                            entry.setLastUsed(getTimestamp(entry));
                             entry.reloadData();
                             if (entry.getNumSubs() > 0) {
-                                mAdapter.add(entry);
+                                entries.add(entry);
                             } else {
                                 Log.w(TAG, "Ignore folder '" + folder.getAbsolutePath()
                                         + "' because no subtitles were found");
                             }
+                        }
+                        if (!entries.isEmpty()) {
+                            removeUnusedTimestamps();
+                            mAdapter.addAll(entries);
+                            mAdapter.sort();
                         }
                     }
                 }

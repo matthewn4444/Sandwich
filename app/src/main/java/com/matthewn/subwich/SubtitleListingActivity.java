@@ -1,11 +1,10 @@
 package com.matthewn.subwich;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.provider.DocumentFile;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -34,6 +33,7 @@ public class SubtitleListingActivity extends UsbDetectionActivity
 
     private static final String TAG = "SubtitleListingActivity";
     static final String FILE_PATH_EXTRA = "SubtitleListingActivity.file.path.extra";
+    static final String RETURN_HAS_WRITTEN_EXTRA = "SubtitleListingActivity.return.has.written.extra";
     private static final String SUBTITLE_FILE = "sub.srt";
     private static final String SUBTITLE_FOLDER = "sub";
 
@@ -42,15 +42,12 @@ public class SubtitleListingActivity extends UsbDetectionActivity
     private GridLayoutManager mLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
-    private SharedPreferences mPrefs;
     private VideoEntry mEntry;
     private final List<File> mSubtitles = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         mRecyclerView = (EnhancedRecyclerView) findViewById(R.id.recycleview);
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swiperefresh);
@@ -209,6 +206,11 @@ public class SubtitleListingActivity extends UsbDetectionActivity
                             Toast.makeText(ctx, finalMessageRes, Toast.LENGTH_SHORT).show();
                             if (finalIsError) {
                                 Log.e(TAG, getString(finalMessageRes));
+                            } else {
+                                Intent in = new Intent();
+                                in.putExtra(RETURN_HAS_WRITTEN_EXTRA, true);
+                                setResult(RESULT_OK, in);
+                                updateVideoTimeStamp(mEntry);
                             }
                         }
                     });
